@@ -29,8 +29,18 @@ public class HabrCareerParse {
                 Element dateTimeRow = dateElement.child(0);
                 String vacancyDateTime = dateTimeRow.attr("datetime");
                 LocalDateTime vacancyDateTimeFormatted = new HabrCareerDateTimeParser().parse(vacancyDateTime);
-                String link = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
+                String vacancyLink = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
+                String link = String.format("%s%s", SOURCE_LINK, vacancyLink);
                 System.out.printf("%s %s %s%n", vacancyName, link, vacancyDateTimeFormatted);
+                Connection descriptionConnection = Jsoup.connect(vacancyLink);
+                try {
+                    Document descriptionDocument = descriptionConnection.get();
+                    Element descriptionTitleElement = descriptionDocument.select(".vacancy-description__text").first();
+                    String vacancyDescription = descriptionTitleElement.text();
+                    System.out.println(vacancyDescription);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             });
         }
     }
