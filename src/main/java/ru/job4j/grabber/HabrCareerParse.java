@@ -5,9 +5,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import java.io.IOException;
-
 public class HabrCareerParse {
 
     private static final String SOURCE_LINK = "https://career.habr.com";
@@ -24,8 +22,9 @@ public class HabrCareerParse {
             String vacancyName = titleElement.text();
             Element dateElement = row.select(".vacancy-card__date").first();
             Element dateTime = dateElement.child(0);
-            String link = String.format("%s%s %s", SOURCE_LINK, linkElement.attr("href"), dateTime.attr("datetime"));
-            System.out.printf("%s %s%n", vacancyName, link);
+            String dateTimeStr = dateTime.attr("datetime");
+            String link = String.format("%s %s", SOURCE_LINK, linkElement.attr("href"));
+            System.out.printf("%s %s %s%n", vacancyName, link, dateTimeStr);
         });
     }
 }
