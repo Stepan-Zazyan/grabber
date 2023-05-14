@@ -40,7 +40,7 @@ public class HabrCareerParse implements Parse {
                 Element dateElement = row.select(".vacancy-card__date").first();
                 Element dateTimeRow = dateElement.child(0);
                 String vacancyDateTime = dateTimeRow.attr("datetime");
-                LocalDateTime vacancyDateTimeFormatted = new HabrCareerDateTimeParser().parse(vacancyDateTime);
+                LocalDateTime vacancyDateTimeFormatted = dateTimeParser.parse(vacancyDateTime);
                 String vacancyLink = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
                 String link = String.format("%s%s", SOURCE_LINK, vacancyLink);
                 System.out.printf("%s %s %s%n", vacancyName, link, vacancyDateTimeFormatted);
