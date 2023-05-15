@@ -12,6 +12,14 @@ public class PsqlStore implements Store {
 
     private Connection cnn;
 
+   private Post createPost(ResultSet resultSet) throws SQLException {
+       return new Post(
+               resultSet.getString("name"),
+               resultSet.getString("text"),
+               resultSet.getString("link"),
+               resultSet.getTimestamp("created").toLocalDateTime());
+   }
+
     public PsqlStore(Properties cfg) {
         try {
             Class.forName(cfg.getProperty("driver"));
@@ -70,11 +78,7 @@ public class PsqlStore implements Store {
                      cnn.prepareStatement("SELECT * from post.post;")) {
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    list.add(new Post(
-                            resultSet.getString("name"),
-                            resultSet.getString("text"),
-                            resultSet.getString("link"),
-                            resultSet.getTimestamp("created").toLocalDateTime()));
+                    list.add(createPost(resultSet));
                 }
             }
         } catch (SQLException e) {
@@ -91,11 +95,7 @@ public class PsqlStore implements Store {
             statement.setInt(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    post = new Post(
-                            resultSet.getString("name"),
-                            resultSet.getString("text"),
-                            resultSet.getString("link"),
-                            resultSet.getTimestamp("created").toLocalDateTime());
+                    post = createPost(resultSet);
                 }
             }
         } catch (SQLException e) {
