@@ -9,26 +9,24 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.util.Properties;
 
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 public class Grabber implements Grab {
-    private final Parse parse;
-    private final Store store;
-    private final Scheduler scheduler;
-    private final int time;
+    private Parse parse;
+    private Store store;
+    private Scheduler scheduler;
+    private int time;
+    private final Properties properties = new Properties();
 
-    public Grabber(Parse parse, Store store, Scheduler scheduler, int time) {
-        this.parse = parse;
-        this.store = store;
-        this.scheduler = scheduler;
-        this.time = time;
+    public Grabber() {
     }
 
     @Override
-    public void init() throws SchedulerException {
+    public void init(Parse parse, Store store, Scheduler scheduler) throws SchedulerException {
         JobDataMap data = new JobDataMap();
         data.put("store", store);
         data.put("parse", parse);
@@ -70,7 +68,7 @@ public class Grabber implements Grab {
     public void web(Store store) {
         new Thread(() -> {
             try (ServerSocket server = new ServerSocket(Integer.parseInt(
-                    Config.get().getProperty("port")))) {
+                    properties.getProperty("port")))) {
                 while (!server.isClosed()) {
                     Socket socket = server.accept();
                     try (OutputStream out = socket.getOutputStream()) {
@@ -89,14 +87,34 @@ public class Grabber implements Grab {
         }).start();
     }
 
-    public static void main(String[] args) throws Exception {
+    private Properties cfg() {
+        try (
+                InputStream in = Grabber.class.getClassLoader()
+                        .getResourceAsStream("rabbit.properties")) {
+            properties.load(in);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        time = Integer.parseInt(properties.getProperty("time"));
+        return properties;
+    }
+
+    public Store store() {
+        return new PsqlStore(cfg());
+    }
+
+    public Scheduler scheduler() throws SchedulerException {
         Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
         scheduler.start();
-        var parse = new HabrCareerParse(new HabrCareerDateTimeParser());
-        var store = new PsqlStore(Config.get());
-        var time = Integer.parseInt(Config.get().getProperty("time"));
-        Grabber grab = new Grabber(parse, store, scheduler, time);
-        grab.init();
+        return scheduler;
+    }
+
+    public static void main(String[] args) throws Exception {
+        Grabber grab = new Grabber();
+        grab.cfg();
+        Scheduler scheduler = grab.scheduler();
+        Store store = grab.store();
+        grab.init(new HabrCareerParse(new HabrCareerDateTimeParser()), store, scheduler);
         grab.web(store);
     }
 }
