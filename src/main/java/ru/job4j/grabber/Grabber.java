@@ -15,19 +15,16 @@ import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 public class Grabber implements Grab {
-    private Parse parse;
-    private Store store;
-    private Scheduler scheduler;
-    private int time;
+    private final Parse parse;
+    private final Store store;
+    private final Scheduler scheduler;
+    private final int time;
 
     public Grabber(Parse parse, Store store, Scheduler scheduler, int time) {
         this.parse = parse;
         this.store = store;
         this.scheduler = scheduler;
         this.time = time;
-    }
-
-    public Grabber() {
     }
 
     @Override
@@ -98,7 +95,8 @@ public class Grabber implements Grab {
         var parse = new HabrCareerParse(new HabrCareerDateTimeParser());
         var store = new PsqlStore(Config.get());
         var time = Integer.parseInt(Config.get().getProperty("time"));
-        new Grabber(parse, store, scheduler, time).init();
-        new Grabber().web(store);
+        Grabber grab = new Grabber(parse, store, scheduler, time);
+        grab.init();
+        grab.web(store);
     }
 }
